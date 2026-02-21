@@ -15,22 +15,95 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String?
-  createdAt DateTime @default(now())
-
-  stories   Story[]
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  
+  // Personal Info
+  firstName     String?
+  lastName      String?
+  phoneNumber   String?  @unique
+  
+  // Public Profile
+  username      String   @unique
+  avatar        String?
+  bio           String?  @db.Text
+  
+  isAuthor      Boolean  @default(false)
+  
+  // Relations (The "Opposite" sides)
+  stories       Story[]
+  library       Library[]
+  progress      ReadingProgress[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
-
+model Category {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  stories Story[]
+}
 
 model Story {
+  id          String    @id @default(uuid())
+  title       String
+  summary     String    @db.Text
+  coverImage  String?
+  published   Boolean   @default(false)
+  
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  
+  categoryId  Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+  
+  chapters    Chapter[]
+  
+  // Relations for Readers (Fixes your 2nd error)
+  libraries   Library[]
+  progress    ReadingProgress[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Chapter {
   id        String   @id @default(uuid())
   title     String
-  content   String
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
+  content   String   @db.Text
+  order     Int      
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+model Library {
+  id        String   @id @default(uuid())
+  userId    String
+  storyId   String
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+  story     Story    @relation(fields: [storyId], references: [id])
+  
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, storyId])
+}
+
+model ReadingProgress {
+  id              String   @id @default(uuid())
+  userId          String
+  storyId         String
+  lastChapterId   String   
+  
+  // Relations (Fixes your 1st error)
+  user            User     @relation(fields: [userId], references: [id])
+  story           Story    @relation(fields: [storyId], references: [id])
+
+  lastReadAt      DateTime @updatedAt
+
+  @@unique([userId, storyId])
 }
