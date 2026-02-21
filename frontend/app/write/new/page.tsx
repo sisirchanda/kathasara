@@ -50,6 +50,7 @@ export default function NewStoryPage() {
 
       toast.success("Story created!");
       //router.push(`/write/edit/${res.data.id}`); // Redirect to chapter editor
+	  router.push(`/write/edit/${res.data.id}`);
     } catch (err) {
       toast.error("Failed to create story");
     } finally {
