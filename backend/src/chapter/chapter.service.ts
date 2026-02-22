@@ -24,4 +24,30 @@ export class ChapterService {
       orderBy: { order: 'asc' },
     });
   }
+  
+	async findOne(id: string) {
+	  const chapter = await this.prisma.chapter.findUnique({
+		where: { id },
+		include: { 
+		  story: { 
+			include: { 
+			  chapters: { orderBy: { order: 'asc' } } 
+			} 
+		  } 
+		}
+	  });
+
+	  if (!chapter) return null;
+
+	  const allChapters = chapter.story.chapters;
+	  const currentIndex = allChapters.findIndex(c => c.id === id);
+
+	  return {
+		...chapter,
+		storyTitle: chapter.story.title,
+		storyId: chapter.story.id,
+		prevId: allChapters[currentIndex - 1]?.id || null,
+		nextId: allChapters[currentIndex + 1]?.id || null,
+	  };
+	}
 }

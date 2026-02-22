@@ -52,13 +52,13 @@ export default function HomePage() {
             <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x">
               {stories.map((story) => (
                 <Link 
-                  href={`/read/${story.id}`} 
+                  href={`/story/${story.id}`} 
                   key={story.id} 
                   className="min-w-[200px] md:min-w-[240px] snap-start group"
                 >
                   <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-md mb-3 transition-transform group-hover:scale-105">
                     <img 
-                      src={story.coverImage || '/placeholder-cover.jpg'} 
+                      src={story.coverImage || '/missing_cover.png'} 
                       className="w-full h-full object-cover" 
                       alt={story.title} 
                     />

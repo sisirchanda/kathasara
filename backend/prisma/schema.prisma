@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,29 +9,23 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  password      String
-  
-  // Personal Info
-  firstName     String?
-  lastName      String?
-  phoneNumber   String?  @unique
-  
-  // Public Profile
-  username      String   @unique
-  avatar        String?
-  bio           String?  @db.Text
-  
-  isAuthor      Boolean  @default(false)
-  
-  // Relations (The "Opposite" sides)
-  stories       Story[]
-  library       Library[]
-  progress      ReadingProgress[]
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String            @id @default(uuid())
+  email       String            @unique
+  password    String
+  createdAt   DateTime          @default(now())
+  avatar      String?
+  bio         String?
+  firstName   String?
+  isAuthor    Boolean           @default(false)
+  lastName    String?
+  phoneNumber String?           @unique
+  updatedAt   DateTime          @updatedAt
+  username    String            @unique
+  comments    Comment[]
+  library     Library[]
+  likes       Like[]
+  progress    ReadingProgress[]
+  stories     Story[]
 }
 
 model Category {
@@ -47,63 +35,74 @@ model Category {
 }
 
 model Story {
-  id          String    @id @default(uuid())
-  title       String
-  summary     String    @db.Text
-  coverImage  String?
-  published   Boolean   @default(false)
-  
-  authorId    String
-  author      User      @relation(fields: [authorId], references: [id])
-  
-  categoryId  Int
-  category    Category  @relation(fields: [categoryId], references: [id])
-  
-  chapters    Chapter[]
-  
-  // Relations for Readers (Fixes your 2nd error)
-  libraries   Library[]
-  progress    ReadingProgress[]
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String            @id @default(uuid())
+  title      String
+  authorId   String
+  createdAt  DateTime          @default(now())
+  categoryId Int
+  coverImage String?
+  published  Boolean           @default(false)
+  summary    String
+  updatedAt  DateTime          @updatedAt
+  chapters   Chapter[]
+  comments   Comment[]
+  libraries  Library[]
+  likes      Like[]
+  progress   ReadingProgress[]
+  author     User              @relation(fields: [authorId], references: [id])
+  category   Category          @relation(fields: [categoryId], references: [id])
 }
 
 model Chapter {
   id        String   @id @default(uuid())
   title     String
-  content   String   @db.Text
-  order     Int      
+  content   String
+  order     Int
   storyId   String
-  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
 }
 
 model Library {
-  id        String   @id @default(uuid())
-  userId    String
-  storyId   String
-  
-  // Relations
-  user      User     @relation(fields: [userId], references: [id])
-  story     Story    @relation(fields: [storyId], references: [id])
-  
-  addedAt   DateTime @default(now())
+  id      String   @id @default(uuid())
+  userId  String
+  storyId String
+  addedAt DateTime @default(now())
+  story   Story    @relation(fields: [storyId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, storyId])
 }
 
 model ReadingProgress {
-  id              String   @id @default(uuid())
-  userId          String
-  storyId         String
-  lastChapterId   String   
-  
-  // Relations (Fixes your 1st error)
-  user            User     @relation(fields: [userId], references: [id])
-  story           Story    @relation(fields: [storyId], references: [id])
-
-  lastReadAt      DateTime @updatedAt
+  id            String   @id @default(uuid())
+  userId        String
+  storyId       String
+  lastChapterId String
+  lastReadAt    DateTime @updatedAt
+  story         Story    @relation(fields: [storyId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, storyId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  storyId   String
+  createdAt DateTime @default(now())
+  story     Story    @relation(fields: [storyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, storyId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  storyId   String
+  createdAt DateTime @default(now())
+  story     Story    @relation(fields: [storyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
