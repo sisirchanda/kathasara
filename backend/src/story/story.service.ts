@@ -94,4 +94,37 @@ export class StoryService {
 		orderBy: { createdAt: 'desc' }
 	  });
 	}
+
+	
+	// Inside your StoryService class
+	async searchStories(query: string) {
+	  return this.prisma.story.findMany({
+		where: {
+		  OR: [
+			{
+			  title: {
+				contains: query,
+				mode: 'insensitive', // This is the "ILike" optimization
+			  },
+			},
+			{
+			  description: {
+				contains: query,
+				mode: 'insensitive',
+			  },
+			},
+		  ],
+		},
+		include: {
+		  author: {
+			select: { firstName: true, lastName: true, username: true }
+		  },
+		  _count: {
+			select: { chapters: true }
+		  }
+		},
+		take: 15, // Optimization: Limit results per search
+	  });
+	}
+
 }

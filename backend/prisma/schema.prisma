@@ -43,6 +43,7 @@ model Story {
   coverImage String?
   published  Boolean           @default(false)
   summary    String
+  description String?
   updatedAt  DateTime          @updatedAt
   chapters   Chapter[]
   comments   Comment[]
