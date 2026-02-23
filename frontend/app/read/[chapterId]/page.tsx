@@ -35,7 +35,9 @@ export default function KathasaraReader() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
         // Fetch Comments for the Story
-        fetchComments(res.data.storyId);
+        if (res.data?.storyId) {
+          fetchComments(res.data.storyId);
+        }
       });
     }
   }, [chapterId]);
@@ -51,21 +53,23 @@ export default function KathasaraReader() {
 
   const handleLike = async () => {
     try {
-      const res = await api.post(`/stories/${data.storyId}/like`);
+      const res = await api.post(`/stories/${data?.storyId}/like`);
       setLiked(res.data.liked);
     } catch (err) {
-      alert("Please login to like this story!");
+      // For Guests: Toggle locally so the heart turns red, even if backend fails
+      setLiked(!liked);
     }
   };
 
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
     try {
-      const res = await api.post(`/stories/${data.storyId}/comments`, { content: newComment });
+      const res = await api.post(`/stories/${data?.storyId}/comments`, { content: newComment });
+      // res.data will include user: null for guests, handled below in the map
       setComments([res.data, ...comments]);
       setNewComment("");
     } catch (err) {
-      alert("Please login to comment!");
+      alert("Error posting comment.");
     }
   };
 
@@ -74,20 +78,20 @@ export default function KathasaraReader() {
   return (
     <div className="min-h-screen bg-[#FCFAF7] pb-20">
       {/* 1. Sticky Branded Header */}
-      <nav className="sticky top-16 bg-white/95 backdrop-blur-sm border-b z-40 h-14 flex items-center">
+      <nav className="sticky top-0 bg-white/95 backdrop-blur-sm border-b z-40 h-14 flex items-center">
         <div className="max-w-3xl mx-auto px-6 w-full flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => router.push(`/story/${data.storyId}`)}>
+            <Button variant="ghost" size="icon" onClick={() => router.push(`/story/${data?.storyId}`)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <span className="truncate max-w-[150px] hidden sm:inline">{data.storyTitle}</span>
+            <span className="truncate max-w-[150px] hidden sm:inline">{data?.storyTitle}</span>
           </div>
           
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setFontSize(prev => prev === 24 ? 18 : prev + 2)}>
+            <Button variant="ghost" size="icon" onClick={() => setFontSize(prev => prev >= 24 ? 18 : prev + 2)}>
               <Type className="h-4 w-4" />
             </Button>
-            <Link href={`/story/${data.storyId}`}>
+            <Link href={`/story/${data?.storyId}`}>
               <Button variant="ghost" size="sm" className="text-orange-600 font-bold">
                 <Menu className="h-4 w-4 mr-2" /> INDEX
               </Button>
@@ -99,16 +103,16 @@ export default function KathasaraReader() {
       {/* 2. Immersive Reading Area */}
       <main className="max-w-2xl mx-auto py-20 px-6 bg-white shadow-2xl shadow-slate-200/50 my-10 rounded-sm border border-slate-100 min-h-screen">
         <header className="mb-16 border-b border-slate-100 pb-10">
-          <p className="text-orange-600 font-black text-xs tracking-[0.3em] uppercase mb-4 text-center">Part {data.order || "—"}</p>
+          <p className="text-orange-600 font-black text-xs tracking-[0.3em] uppercase mb-4 text-center">Part {data?.order || "—"}</p>
           <h1 className="text-4xl md:text-5xl font-serif font-black text-slate-900 leading-tight italic text-center">
-            {data.title}
+            {data?.title}
           </h1>
         </header>
         
         <article 
           className="prose prose-slate lg:prose-xl prose-serif max-w-none text-slate-800 leading-[2.3rem] selection:bg-orange-100 mb-20"
           style={{ fontSize: `${fontSize}px` }}
-          dangerouslySetInnerHTML={{ __html: data.content }} 
+          dangerouslySetInnerHTML={{ __html: data?.content }} 
         />
 
         {/* Interaction Bar (Floating Styled) */}
@@ -132,7 +136,7 @@ export default function KathasaraReader() {
 
         {/* 3. Bottom Transition Card */}
         <div className="mt-12 pt-12">
-          {data.nextId ? (
+          {data?.nextId ? (
             <div 
               onClick={() => router.push(`/read/${data.nextId}`)}
               className="group cursor-pointer bg-slate-50 border border-slate-200 rounded-2xl p-10 flex flex-col items-center text-center hover:border-orange-300 hover:bg-orange-50 transition-all shadow-sm"
@@ -154,7 +158,7 @@ export default function KathasaraReader() {
         {/* 4. Day 11: Comment Section */}
         <section className="mt-20 pt-10 border-t border-slate-100">
           <h3 className="text-xl font-bold mb-8 flex items-center gap-2">
-            <MessageSquare className="text-orange-600" /> Reader Thoughts ({comments.length})
+            <MessageSquare className="text-orange-600" /> Reader Thoughts ({comments?.length || 0})
           </h3>
 
           <div className="mb-12 relative">
@@ -178,15 +182,19 @@ export default function KathasaraReader() {
             {comments.map((comment) => (
               <div key={comment.id} className="flex gap-4 group">
                 <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center font-bold text-orange-600 uppercase">
-                  {comment.user.firstName[0]}
+                  {/* SAFE AVATAR: Check for user existence */}
+                  {comment?.user?.firstName ? comment.user.firstName[0] : 'Guest'}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm font-bold text-slate-900">
-                      {comment.user.firstName} {comment.user.lastName}
+                      {/* SAFE NAME: Fallback to Guest if user is null */}
+                      {comment?.user 
+                        ? `${comment.user.firstName} ${comment.user.lastName || ''}` 
+                        : 'Guest'}
                     </span>
                     <span className="text-[10px] text-slate-400 font-bold uppercase">
-                      {new Date(comment.createdAt).toLocaleDateString()}
+                      {comment?.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ''}
                     </span>
                   </div>
                   <p className="text-slate-600 text-sm leading-relaxed">
