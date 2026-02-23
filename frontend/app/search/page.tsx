@@ -1,6 +1,7 @@
 "use client";
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import api from '@/lib/axios';
 
 export default function SearchPage() {
