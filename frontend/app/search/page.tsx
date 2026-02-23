@@ -1,11 +1,11 @@
 "use client";
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 
-
-export default function SearchPage() {
+// 1. Move the search logic into a separate component
+function SearchResultsContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
   const [results, setResults] = useState([]);
@@ -17,22 +17,28 @@ export default function SearchPage() {
   }, [query]);
 
   return (
-    <div className="max-w-5xl mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-8 italic">
-        "{query}" এর ফলাফল (Results for "{query}")
-      </h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {results.map((story: any) => (
-          <Link href={`/story/${story.id}`} key={story.id}>
-            <div className="p-4 border rounded-xl hover:shadow-md transition-shadow">
-              <h2 className="text-xl font-bold text-orange-600">{story.title}</h2>
-              <p className="text-slate-500 text-sm">By {story.author.firstName}</p>
-            </div>
-          </Link>
-        ))}
-        {results.length === 0 && <p className="text-slate-400">No stories found.</p>}
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {results.map((story: any) => (
+        <Link href={`/story/${story.id}`} key={story.id}>
+          <div className="border p-4 rounded-lg hover:shadow-md transition-shadow">
+            <h3 className="font-bold text-lg text-orange-600">{story.title}</h3>
+            <p className="text-slate-500 text-sm">By {story.author?.firstName}</p>
+          </div>
+        </Link>
+      ))}
+      {results.length === 0 && <p className="text-slate-400">No stories found for "{query}".</p>}
+    </div>
+  );
+}
+
+// 2. The main Page component wraps the content in Suspense
+export default function SearchPage() {
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-10">
+      <h2 className="text-xl mb-6 font-bold">Search Results</h2>
+      <Suspense fallback={<p>Loading search results...</p>}>
+        <SearchResultsContent />
+      </Suspense>
     </div>
   );
 }
