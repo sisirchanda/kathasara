@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 
+
+
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q');
